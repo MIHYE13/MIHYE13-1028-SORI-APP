@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1040" viewBox="0 0 800 1040" font-family="Pretendard, 'Noto Sans KR', 'Malgun Gothic', sans-serif">
+  <title>예시 1쪽: 따뜻한 물과 차가운 물</title>
+  <rect width="800" height="1040" fill="#fcfdfb"/>
+  <rect x="40" y="40" width="720" height="960" rx="24" fill="none" stroke="#ccdde4" stroke-width="3"/>
+  <text x="80" y="120" font-size="44" font-weight="800" fill="#19324a">온도란 무엇일까요?</text>
+  <text x="80" y="165" font-size="22" fill="#5c7182">소리책방 예시 자료 · 직접 그린 그림</text>
+
+  <!-- 따뜻한 물 컵 -->
+  <g transform="translate(150 250)">
+    <path d="M10 40 Q40 0 70 40 M60 30 Q90 -10 120 30 M110 40 Q140 0 170 40" fill="none" stroke="#e8836b" stroke-width="6" stroke-linecap="round"/>
+    <path d="M0 80 L180 80 L160 330 L20 330 Z" fill="#ffffff" stroke="#19324a" stroke-width="5"/>
+    <path d="M8 140 L172 140 L160 325 L20 325 Z" fill="#f7b49f"/>
+    <text x="90" y="390" font-size="30" font-weight="700" fill="#19324a" text-anchor="middle">따뜻한 물</text>
+  </g>
+
+  <!-- 차가운 물 컵 -->
+  <g transform="translate(470 250)">
+    <path d="M0 80 L180 80 L160 330 L20 330 Z" fill="#ffffff" stroke="#19324a" stroke-width="5"/>
+    <path d="M8 140 L172 140 L160 325 L20 325 Z" fill="#a9d8ec"/>
+    <rect x="40" y="170" width="45" height="45" rx="8" fill="#e9f6fb" stroke="#6fb6d4" stroke-width="4" transform="rotate(-12 62 192)"/>
+    <rect x="95" y="210" width="45" height="45" rx="8" fill="#e9f6fb" stroke="#6fb6d4" stroke-width="4" transform="rotate(10 117 232)"/>
+    <text x="90" y="390" font-size="30" font-weight="700" fill="#19324a" text-anchor="middle">차가운 물</text>
+  </g>
+
+  <!-- 손으로 느끼기 말풍선 -->
+  <rect x="120" y="700" width="560" height="110" rx="20" fill="#ddeff7"/>
+  <text x="400" y="745" font-size="26" fill="#19324a" text-anchor="middle">손으로 만지면 느낌이 사람마다 달라요.</text>
+  <text x="400" y="785" font-size="26" fill="#19324a" text-anchor="middle">정확한 온도는 온도계로 재요!</text>
+
+  <text x="400" y="900" font-size="34" font-weight="800" fill="#19324a" text-anchor="middle">온도의 단위: ℃ (섭씨도)</text>
+  <text x="720" y="970" font-size="22" fill="#5c7182" text-anchor="end">1</text>
+</svg>

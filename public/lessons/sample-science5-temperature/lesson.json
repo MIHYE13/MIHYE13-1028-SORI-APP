@@ -1,0 +1,67 @@
+{
+  "schemaVersion": "1.0",
+  "lessonId": "sample-science5-temperature",
+  "lessonVersion": 2,
+  "contentHash": "sample-temperature-original-v2",
+  "title": "온도계로 물체의 온도 재기 (예시)",
+  "subject": "과학",
+  "grade": 5,
+  "unit": "온도와 열 (직접 만든 예시 차시)",
+  "status": "published",
+  "readingThreshold": 70,
+  "maxReadingAttempts": 2,
+  "pointerTrackingEnabled": true,
+  "pages": [
+    {
+      "pageId": "p1",
+      "pageNumber": 1,
+      "asset": "lessons/sample-science5-temperature/assets/page-1.svg",
+      "text": "우리 주변의 물체는 저마다 따뜻하고 차가운 정도가 다릅니다. 이 정도를 숫자로 나타낸 것을 온도라고 하고, 단위로는 섭씨도를 씁니다. 손으로 만져서 느끼는 것은 사람마다 다를 수 있으므로, 정확한 온도를 알려면 온도계가 필요합니다."
+    },
+    {
+      "pageId": "p2",
+      "pageNumber": 2,
+      "asset": "lessons/sample-science5-temperature/assets/page-2.svg",
+      "text": "온도계는 쓰임에 따라 여러 가지가 있습니다. 알코올 온도계는 빨간 액체 기둥의 높이로 공기나 물의 온도를 보여 줍니다. 탐침 온도계는 뾰족한 끝을 음식이나 액체 속에 넣어 안쪽 온도를 잽니다. 적외선 온도계는 물체에 닿지 않고도 겉면의 온도를 빠르게 잽니다. 무엇을 재는지에 맞게 온도계를 고르면 더 정확하고 안전하게 측정할 수 있습니다."
+    }
+  ],
+  "readingText": "온도계는 쓰임에 따라 여러 가지가 있습니다. 알코올 온도계는 빨간 액체 기둥의 높이로 공기나 물의 온도를 보여 줍니다. 탐침 온도계는 뾰족한 끝을 음식이나 액체 속에 넣어 안쪽 온도를 잽니다. 적외선 온도계는 물체에 닿지 않고도 겉면의 온도를 빠르게 잽니다. 무엇을 재는지에 맞게 온도계를 고르면 더 정확하고 안전하게 측정할 수 있습니다.",
+  "questions": [
+    {
+      "questionId": "q1",
+      "type": "multiple",
+      "prompt": "끓고 있는 국 속의 온도를 재는 데 가장 알맞은 온도계는 무엇인가요?",
+      "options": ["탐침 온도계", "알코올 온도계", "적외선 온도계", "자"],
+      "answer": "탐침 온도계",
+      "feedbackHints": ["2쪽에서 ‘음식이나 액체 속’을 재는 온도계를 찾아보세요."]
+    },
+    {
+      "questionId": "q2",
+      "type": "short",
+      "prompt": "물체의 따뜻하고 차가운 정도를 숫자로 나타낸 것을 무엇이라고 하나요?",
+      "answer": "온도",
+      "acceptedAnswers": ["온도"],
+      "feedbackHints": ["1쪽 첫 문장 다음에 나오는 낱말을 찾아보세요."]
+    },
+    {
+      "questionId": "q3",
+      "type": "descriptive",
+      "prompt": "재려는 물체에 맞는 온도계를 골라 쓰면 좋은 점을 한두 문장으로 설명하세요.",
+      "answer": "온도를 더 정확하고 안전하게 잴 수 있습니다.",
+      "modelAnswer": "재려는 물체에 맞는 온도계를 쓰면 온도를 더 정확하고 안전하게 측정할 수 있습니다.",
+      "keywords": ["정확", "안전"],
+      "feedbackHints": ["‘정확’, ‘안전’ 가운데 알맞은 낱말을 넣어 보세요."]
+    },
+    {
+      "questionId": "q4",
+      "type": "puzzle",
+      "prompt": "여러 가지 온도계 그림을 원래 모습으로 맞춰 보세요.",
+      "answer": "completed",
+      "puzzleImage": "lessons/sample-science5-temperature/assets/page-2.svg",
+      "puzzleAlt": "알코올 온도계, 탐침 온도계, 적외선 온도계를 직접 그린 예시 그림",
+      "puzzleRows": 2,
+      "puzzleColumns": 3,
+      "feedbackHints": ["온도계 이름 글자가 이어지는 부분을 찾아보세요."]
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1040" viewBox="0 0 800 1040" font-family="Pretendard, 'Noto Sans KR', 'Malgun Gothic', sans-serif">
+  <title>예시 2쪽: 여러 가지 온도계</title>
+  <rect width="800" height="1040" fill="#fcfdfb"/>
+  <rect x="40" y="40" width="720" height="960" rx="24" fill="none" stroke="#ccdde4" stroke-width="3"/>
+  <text x="80" y="120" font-size="44" font-weight="800" fill="#19324a">여러 가지 온도계</text>
+  <text x="80" y="165" font-size="22" fill="#5c7182">소리책방 예시 자료 · 직접 그린 그림</text>
+
+  <!-- 알코올 온도계 -->
+  <g transform="translate(110 230)">
+    <rect x="30" y="0" width="80" height="420" rx="16" fill="#ffffff" stroke="#19324a" stroke-width="4"/>
+    <rect x="62" y="40" width="16" height="330" rx="8" fill="#eef3f5"/>
+    <rect x="62" y="200" width="16" height="170" fill="#d94c4c"/>
+    <circle cx="70" cy="380" r="22" fill="#d94c4c"/>
+    <g stroke="#5c7182" stroke-width="3">
+      <line x1="85" y1="80" x2="100" y2="80"/><line x1="85" y1="140" x2="100" y2="140"/>
+      <line x1="85" y1="200" x2="100" y2="200"/><line x1="85" y1="260" x2="100" y2="260"/>
+      <line x1="85" y1="320" x2="100" y2="320"/>
+    </g>
+    <text x="70" y="480" font-size="28" font-weight="700" fill="#19324a" text-anchor="middle">알코올 온도계</text>
+    <text x="70" y="518" font-size="22" fill="#5c7182" text-anchor="middle">공기·물의 온도</text>
+  </g>
+
+  <!-- 탐침 온도계 -->
+  <g transform="translate(330 230)">
+    <rect x="35" y="0" width="80" height="140" rx="18" fill="#2f7d5c" stroke="#19324a" stroke-width="4"/>
+    <rect x="50" y="22" width="50" height="40" rx="6" fill="#d8f0e2"/>
+    <text x="75" y="52" font-size="22" font-weight="800" fill="#19324a" text-anchor="middle">63</text>
+    <path d="M70 140 L80 140 L76 330 L74 330 Z" fill="#8ea3b0" stroke="#19324a" stroke-width="3"/>
+    <path d="M10 250 L140 250 L130 400 L20 400 Z" fill="#ffd27a" stroke="#19324a" stroke-width="4"/>
+    <text x="75" y="480" font-size="28" font-weight="700" fill="#19324a" text-anchor="middle">탐침 온도계</text>
+    <text x="75" y="518" font-size="22" fill="#5c7182" text-anchor="middle">음식·액체 속 온도</text>
+  </g>
+
+  <!-- 적외선 온도계 -->
+  <g transform="translate(530 260)">
+    <path d="M0 40 Q0 0 40 0 L130 0 Q150 0 150 20 L150 80 L60 80 L70 200 L20 200 L10 80 Q0 80 0 60 Z" fill="#f08a3c" stroke="#19324a" stroke-width="4"/>
+    <rect x="25" y="18" width="80" height="40" rx="6" fill="#cdeccf"/>
+    <text x="65" y="47" font-size="22" font-weight="800" fill="#19324a" text-anchor="middle">20.5</text>
+    <line x1="150" y1="40" x2="190" y2="300" stroke="#d94c4c" stroke-width="3" stroke-dasharray="8 8"/>
+    <circle cx="190" cy="310" r="10" fill="#d94c4c"/>
+    <text x="80" y="450" font-size="28" font-weight="700" fill="#19324a" text-anchor="middle">적외선 온도계</text>
+    <text x="80" y="488" font-size="22" fill="#5c7182" text-anchor="middle">닿지 않고 겉면 온도</text>
+  </g>
+
+  <rect x="120" y="830" width="560" height="90" rx="20" fill="#ffe58a"/>
+  <text x="400" y="885" font-size="28" font-weight="700" fill="#19324a" text-anchor="middle">무엇을 재는지에 맞게 골라 써요</text>
+  <text x="720" y="970" font-size="22" fill="#5c7182" text-anchor="end">2</text>
+</svg>
