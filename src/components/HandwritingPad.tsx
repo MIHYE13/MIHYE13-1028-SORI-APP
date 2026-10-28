@@ -2,6 +2,50 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { Stroke, StrokePoint } from "../types";
 import { recognizeKoreanText } from "../ocr";
 
+// OCR은 굵고 진한 글자를 잘 읽으므로, 획을 글씨 크기에 맞는 굵은 선으로 다시 그리고
+// 글씨가 있는 부분만 여백을 두고 잘라 낸다.
+function renderForOcr(strokes: Stroke[], canvas: HTMLCanvasElement): HTMLCanvasElement {
+  const rect = canvas.getBoundingClientRect();
+  const points = strokes.flatMap((stroke) =>
+    stroke.points.map((point) => ({ x: point.x * rect.width, y: point.y * rect.height })),
+  );
+  const minX = Math.min(...points.map((point) => point.x));
+  const maxX = Math.max(...points.map((point) => point.x));
+  const minY = Math.min(...points.map((point) => point.y));
+  const maxY = Math.max(...points.map((point) => point.y));
+  const inkHeight = Math.max(maxY - minY, 20);
+  const scale = Math.min(4, Math.max(1, 120 / inkHeight));
+  const padding = 24;
+
+  const output = document.createElement("canvas");
+  output.width = Math.ceil((maxX - minX) * scale + padding * 2);
+  output.height = Math.ceil((maxY - minY) * scale + padding * 2);
+  const context = output.getContext("2d");
+  if (!context) return canvas;
+  context.fillStyle = "#ffffff";
+  context.fillRect(0, 0, output.width, output.height);
+  context.strokeStyle = "#000000";
+  context.lineWidth = Math.max(6, Math.round(inkHeight * scale * 0.06));
+  context.lineCap = "round";
+  context.lineJoin = "round";
+  strokes.forEach((stroke) => {
+    if (!stroke.points.length) return;
+    context.beginPath();
+    stroke.points.forEach((point, index) => {
+      const x = (point.x * rect.width - minX) * scale + padding;
+      const y = (point.y * rect.height - minY) * scale + padding;
+      if (index === 0) context.moveTo(x, y);
+      else context.lineTo(x, y);
+    });
+    if (stroke.points.length === 1) context.lineTo(
+      (stroke.points[0].x * rect.width - minX) * scale + padding + 0.1,
+      (stroke.points[0].y * rect.height - minY) * scale + padding,
+    );
+    context.stroke();
+  });
+  return output;
+}
+
 interface HandwritingPadProps {
   onRecognized: (text: string) => void;
   onStrokesChange: (strokes: Stroke[]) => void;
@@ -113,9 +157,13 @@ export default function HandwritingPad({
     setStatus("손글씨를 읽고 있어요.");
     setProgress(0);
     try {
-      const value = await recognizeKoreanText(canvas, (_message, nextProgress) => {
-        if (typeof nextProgress === "number") setProgress(nextProgress);
-      });
+      const value = await recognizeKoreanText(
+        renderForOcr(strokesRef.current, canvas),
+        (_message, nextProgress) => {
+          if (typeof nextProgress === "number") setProgress(nextProgress);
+        },
+        "handwriting",
+      );
       onRecognized(value);
       setStatus(value ? "읽힌 글자를 확인하고 필요하면 고쳐 주세요." : "글자를 읽지 못했어요. 키보드로 입력해 주세요.");
     } catch {
