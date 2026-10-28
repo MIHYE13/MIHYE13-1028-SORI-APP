@@ -65,6 +65,8 @@ export default function StudentExperience() {
   const [feedback, setFeedback] = useState<string[]>([]);
   const [pointerEvents, setPointerEvents] = useState<PointerRecord[]>([]);
   const [exportStatus, setExportStatus] = useState("");
+  const [celebrating, setCelebrating] = useState(false);
+  const celebrateRef = useRef<HTMLDialogElement>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const quizRef = useRef<HTMLDivElement>(null);
   const lastMoveRef = useRef(0);
@@ -88,6 +90,11 @@ export default function StudentExperience() {
       })
       .catch(() => setLoadError("수업 자료를 열지 못했어요. 링크를 다시 확인해 주세요."));
   }, [lessonId]);
+
+  useEffect(() => {
+    const dialog = celebrateRef.current;
+    if (stage === "result" && celebrating && dialog && !dialog.open) dialog.showModal();
+  }, [stage, celebrating]);
 
   useEffect(() => {
     if (!lesson || !profile.pseudonymousId) return;
@@ -258,6 +265,7 @@ export default function StudentExperience() {
     if (!lesson) return;
     if (questionIndex >= lesson.questions.length - 1) {
       setStage("result");
+      setCelebrating(true);
       return;
     }
     setQuestionIndex((current) => current + 1);
@@ -587,6 +595,21 @@ export default function StudentExperience() {
           <Link to="/" className="back-link">다른 수업 보기</Link>
         </section>
       </main>
+      <dialog
+        ref={celebrateRef}
+        className="celebrate-dialog"
+        aria-labelledby="celebrate-title"
+        onClose={() => setCelebrating(false)}
+      >
+        <div className="celebrate-burst" aria-hidden="true">🎉</div>
+        <h2 id="celebrate-title">학습을 다 마쳤습니다.</h2>
+        <p>축하합니다!</p>
+        <form method="dialog">
+          <button type="submit" className="primary-button" autoFocus>
+            확인
+          </button>
+        </form>
+      </dialog>
     </div>
   );
 }

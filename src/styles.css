@@ -326,3 +326,13 @@ textarea { min-height: 110px; resize: vertical; line-height: 1.65; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
+
+.celebrate-dialog { width: min(420px, calc(100% - 32px)); padding: 36px 28px 28px; border: 0; border-top: 7px solid var(--highlight); border-radius: 12px; background: #fff; color: var(--ink); text-align: center; box-shadow: 0 24px 60px rgba(25, 50, 74, 0.28); }
+.celebrate-dialog::backdrop { background: rgba(25, 50, 74, 0.45); }
+.celebrate-dialog[open] { animation: celebrate-pop 0.35s ease-out; }
+.celebrate-dialog h2 { margin: 8px 0 4px; font-size: 26px; line-height: 1.35; }
+.celebrate-dialog p { margin: 0 0 20px; font-size: 22px; font-weight: 700; color: var(--sky-strong); }
+.celebrate-dialog .primary-button { min-width: 140px; }
+.celebrate-burst { font-size: 56px; line-height: 1; }
+@keyframes celebrate-pop { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .celebrate-dialog[open] { animation: none; } }
