@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.vite/
+coverage/
+tmp/
+교과서_원본/
+*.local
+*.log
+.obsidian/
+/*.pdf
+/*.zip
+*.tsbuildinfo
+/vite.config.js
+/vite.config.d.ts

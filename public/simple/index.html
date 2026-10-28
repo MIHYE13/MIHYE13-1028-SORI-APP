@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>소리책방 간단판</title>
+<style>
+  :root { --paper:#fcfdfb; --ink:#19324a; --sky:#ddeff7; --hl:#ffe58a; --red:#d94c4c; --green:#2f7d5c; --line:#ccdde4; --muted:#5c7182; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--paper); color:var(--ink); font:18px/1.7 Pretendard,"Noto Sans KR",system-ui,sans-serif; }
+  header { padding:16px 5vw; border-bottom:1px solid var(--line); font-weight:800; font-size:21px; }
+  main { max-width:760px; margin:0 auto; padding:24px 16px 64px; border-left:3px solid var(--sky); }
+  h1 { font-size:30px; line-height:1.3; margin:0 0 12px; }
+  .note { color:var(--muted); font-size:16px; }
+  label { display:block; margin:12px 0 4px; font-weight:700; }
+  input, textarea, select { width:100%; padding:10px 12px; border:2px solid var(--line); border-radius:8px; background:#fff; color:inherit; font:inherit; }
+  textarea { min-height:110px; }
+  button { min-height:44px; padding:8px 18px; margin:16px 8px 0 0; border:0; border-radius:8px; background:var(--ink); color:#fff; font:inherit; font-weight:650; cursor:pointer; }
+  button.sub { background:var(--sky); color:var(--ink); }
+  button:disabled { opacity:.45; cursor:not-allowed; }
+  :focus-visible { outline:3px solid #f0b800; outline-offset:3px; }
+  .text { background:var(--sky); padding:16px; border-radius:8px; font-size:22px; }
+  .page { width:100%; border:1px solid var(--line); border-radius:8px; margin:8px 0; }
+  .ok { color:var(--green); font-weight:700; }
+  .bad { color:var(--red); font-weight:700; }
+  mark { background:var(--hl); }
+  .opt { display:flex; gap:10px; align-items:center; margin:6px 0; padding:8px 12px; border:2px solid var(--line); border-radius:8px; cursor:pointer; }
+  .opt input { width:auto; }
+  .puzzle { display:grid; gap:2px; background:#fff; max-width:480px; }
+  .piece { aspect-ratio:1/1.2; border:0; margin:0; padding:0; border-radius:0; background-repeat:no-repeat; }
+  .piece.sel { outline:4px solid var(--ink); outline-offset:-4px; }
+  pre { white-space:pre-wrap; word-break:break-all; background:#fff; border:1px solid var(--line); padding:12px; font-size:13px; max-height:240px; overflow:auto; }
+</style>
+</head>
+<body>
+<header>소리책방 · 간단판</header>
+<main id="app"><p>수업을 불러오는 중…</p></main>
+<script>
+// 단일 파일·무빌드 버전: 반·번호 → 낭독(70%, 1회 재시도) → 문제 풀이 → 피드백 → 결과 JSON
+const ROOT = "../";
+const app = document.getElementById("app");
+const state = { lesson: null, student: null, startedAt: null, attempts: [], answers: [], q: 0 };
+
+const norm = s => (s || "").normalize("NFC").toLowerCase().replace(/[^0-9a-z가-힣\s]/g, " ").replace(/\s+/g, " ").trim();
+const words = s => norm(s) ? norm(s).split(" ") : [];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+// 어절 단위 LCS로 일치율 계산
+function readingScore(original, heard) {
+  const a = words(original), b = words(heard);
+  const t = Array.from({ length: a.length + 1 }, () => Array(b.length + 1).fill(0));
+  for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++)
+    t[i][j] = a[i - 1] === b[j - 1] ? t[i - 1][j - 1] + 1 : Math.max(t[i - 1][j], t[i][j - 1]);
+  const hit = new Set();
+  for (let i = a.length, j = b.length; i && j;) {
+    if (a[i - 1] === b[j - 1]) { hit.add(i - 1); i--; j--; } else if (t[i - 1][j] >= t[i][j - 1]) i--; else j--;
+  }
+  return { score: a.length ? Math.round(t[a.length][b.length] / a.length * 100) : 0, missingWords: a.filter((_, i) => !hit.has(i)) };
+}
+
+function similarity(x, y) {
+  const a = norm(x), b = norm(y);
+  if (!a || !b) return a === b ? 1 : 0;
+  let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i];
+    for (let j = 1; j <= b.length; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    prev = cur;
+  }
+  return +(1 - prev[b.length] / Math.max(a.length, b.length)).toFixed(2);
+}
+
+function assess(q, value) {
+  if (q.type === "descriptive") {
+    const kw = q.keywords || [];
+    const inc = kw.filter(k => norm(value).includes(norm(k)));
+    const miss = kw.filter(k => !inc.includes(k));
+    return {
+      keywordScore: kw.length ? +(inc.length / kw.length).toFixed(2) : 0,
+      similarityScore: similarity(value, q.modelAnswer || q.answer),
+      feedback: [
+        inc.length ? `핵심어 ${inc.map(k => `“${k}”`).join(", ")}를 잘 사용했어요.` : "교과서의 핵심 낱말을 한 가지 이상 넣어 보세요.",
+        miss.length ? `“${miss[0]}”의 의미를 답에 더해 보세요.` : "중요한 내용을 빠짐없이 설명했어요.",
+      ],
+    };
+  }
+  const correct = [q.answer, ...(q.acceptedAnswers || [])].map(norm).includes(norm(value));
+  return { correct, feedback: [correct ? "정확하게 답했어요." : (q.feedbackHints?.[0] || "교과서를 다시 살펴보세요.")] };
+}
+
+function randomId() {
+  const abc = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  return Array.from(crypto.getRandomValues(new Uint8Array(6)), n => abc[n % abc.length]).join("");
+}
+
+// 1. 시작
+async function init() {
+  try {
+    const list = await (await fetch(ROOT + "lessons/index.json")).json();
+    const wanted = new URLSearchParams(location.search).get("lesson");
+    const entry = list.find(l => l.lessonId === wanted) || list.find(l => l.status === "published");
+    state.lesson = await (await fetch(ROOT + entry.path)).json();
+    renderStart();
+  } catch (e) {
+    app.innerHTML = `<p class="bad">수업 파일을 불러오지 못했어요. lessons/index.json 경로를 확인하세요.</p>`;
+  }
+}
+
+function renderStart() {
+  const L = state.lesson;
+  app.innerHTML = `
+    <p class="note">${esc(L.subject)} ${L.grade}학년 · ${esc(L.unit || "")}</p>
+    <h1>${esc(L.title)}</h1>
+    <p>오늘 읽을 교과서를 소리 내어 읽어 볼까요?</p>
+    <label for="cls">반</label><input id="cls" placeholder="예: 5-2">
+    <label for="num">번호</label><input id="num" type="number" min="1" placeholder="예: 12">
+    <p class="note">이름은 받지 않아요. 반·번호는 선생님이 구분하는 데 쓰여 완전한 익명은 아니에요(가명 처리).
+    음성은 저장하지 않지만 브라우저의 음성 인식 서비스에서 처리될 수 있어요.</p>
+    <button id="go">학생으로 시작하기</button>`;
+  document.getElementById("go").onclick = () => {
+    const cls = document.getElementById("cls").value.trim();
+    const num = document.getElementById("num").value.trim();
+    if (!cls || !num) return alert("반과 번호를 입력하세요.");
+    state.student = { class: cls, number: Number(num), anonymousId: randomId() };
+    state.startedAt = new Date().toISOString();
+    renderReading();
+  };
+}
+
+// 2. 낭독
+function renderReading() {
+  const L = state.lesson, n = state.attempts.length + 1;
+  const text = L.readingText || L.pages.map(p => p.text).join(" ");
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  app.innerHTML = `
+    <p class="note">${n === 1 ? "첫 번째" : "두 번째"} 읽기 · 기준 ${L.readingThreshold}%</p>
+    <h1>교과서를 소리 내어 읽어 보세요</h1>
+    ${L.pages.map(p => `<img class="page" src="${ROOT + esc(p.asset)}" alt="교과서 ${p.pageNumber}쪽">`).join("")}
+    <p class="text">${esc(text)}</p>
+    <p id="status" class="note">${SR ? "준비되면 읽기 시작을 누르세요." : "이 브라우저는 음성 인식을 지원하지 않아요. Chrome·Edge를 사용하거나 바로 문제로 넘어가세요."}</p>
+    <p id="heard"></p>
+    <button id="start" ${SR ? "" : "disabled"}>읽기 시작</button>
+    <button id="stop" class="sub" disabled>읽기 끝내기</button>
+    <button id="skip" class="sub">${SR ? "음성 없이 문제로" : "문제로 가기"}</button>`;
+  const $ = id => document.getElementById(id);
+  $("skip").onclick = () => { state.attempts.push({ attempt: n, status: SR ? "skipped" : "unsupported" }); renderQuestion(); };
+  if (!SR) return;
+  const rec = new SR();
+  rec.lang = "ko-KR"; rec.continuous = true; rec.interimResults = true;
+  let finalText = "";
+  rec.onresult = e => {
+    let interim = "";
+    for (let i = e.resultIndex; i < e.results.length; i++)
+      e.results[i].isFinal ? finalText += e.results[i][0].transcript + " " : interim += e.results[i][0].transcript;
+    $("heard").textContent = "들린 내용: " + finalText + interim;
+  };
+  rec.onerror = e => { $("status").textContent = e.error === "not-allowed" ? "마이크 권한이 거부됐어요. 주소창의 마이크 설정을 확인하거나 음성 없이 넘어가세요." : "인식 오류: " + e.error; };
+  rec.onend = () => finish();
+  let done = false;
+  function finish() {
+    if (done) return; done = true;
+    const r = readingScore(text, finalText);
+    state.attempts.push({ attempt: n, recognizedText: finalText.trim(), ...r });
+    const pass = r.score >= L.readingThreshold;
+    const last = pass || n >= L.maxReadingAttempts;
+    app.insertAdjacentHTML("beforeend", `
+      <h2 class="${pass ? "ok" : "bad"}">${pass ? "✔ 잘 읽었어요" : "△ 조금 더 읽어 볼까요"} — 일치율 ${r.score}%</h2>
+      ${r.missingWords.length ? `<p>빠지거나 다르게 들린 낱말: ${r.missingWords.map(w => `<mark>${esc(w)}</mark>`).join(" ")}</p>` : ""}
+      <button id="next">${last ? "문제 풀러 가기" : "한 번 더 읽기"}</button>`);
+    $("start").disabled = $("stop").disabled = true;
+    $("next").onclick = () => last ? renderQuestion() : renderReading();
+  }
+  $("start").onclick = () => { rec.start(); $("start").disabled = true; $("stop").disabled = false; $("status").textContent = "● 듣는 중"; };
+  $("stop").onclick = () => rec.stop();
+}
+
+// 3. 문제
+function renderQuestion() {
+  const qs = state.lesson.questions, q = qs[state.q];
+  if (!q) return renderResult();
+  const head = `<p class="note">문제 ${state.q + 1} / ${qs.length}</p><h1>${esc(q.prompt)}</h1>`;
+  if (q.type === "puzzle") return renderPuzzle(q, head);
+  const input = q.type === "multiple"
+    ? q.options.map(o => `<label class="opt"><input type="radio" name="a" value="${esc(o)}">${esc(o)}</label>`).join("")
+    : q.type === "short" ? `<label for="a">답</label><input id="a">` : `<label for="a">한두 문장으로 쓰기</label><textarea id="a"></textarea>`;
+  app.innerHTML = head + input + `<button id="check">답 확인하기</button><div id="fb"></div>`;
+  document.getElementById("check").onclick = () => {
+    const value = q.type === "multiple" ? (document.querySelector("input[name=a]:checked") || {}).value || "" : document.getElementById("a").value;
+    if (!value.trim()) return alert("답을 입력하세요.");
+    const r = assess(q, value);
+    state.answers.push({ questionId: q.questionId, inputType: q.type === "multiple" ? "choice" : "keyboard", confirmedText: value, ...r });
+    document.getElementById("check").disabled = true;
+    const mark = r.correct === true ? "✔ " : r.correct === false ? "✖ " : "• ";
+    const cls = r.correct === false ? "bad" : r.correct ? "ok" : "";
+    document.getElementById("fb").innerHTML = r.feedback.map(f => `<p class="${cls}">${mark}${esc(f)}</p>`).join("")
+      + (q.type === "descriptive" ? `<p class="note">핵심어 ${Math.round(r.keywordScore * 100)}% · 모범 답안 유사도 ${Math.round(r.similarityScore * 100)}% (참고용)</p>` : "")
+      + `<button id="next">다음</button>`;
+    document.getElementById("next").onclick = () => { state.q++; renderQuestion(); };
+  };
+}
+
+// 두 조각을 차례로 눌러 위치 교환
+function renderPuzzle(q, head) {
+  const R = q.puzzleRows, C = q.puzzleColumns, N = R * C, src = ROOT + q.puzzleImage;
+  let order, moves = 0, restarts = 0, hints = 0, sel = null;
+  const shuffle = () => { do order = [...Array(N).keys()].sort(() => Math.random() - .5); while (order.every((v, i) => v === i)); };
+  shuffle();
+  app.innerHTML = head + `<p class="note">${esc(q.puzzleAlt)}</p>
+    <div class="puzzle" id="pz" style="grid-template-columns:repeat(${C},1fr)"></div>
+    <p id="msg" class="note">두 조각을 차례로 누르면 자리가 바뀌어요. 이동 0회</p>
+    <button class="sub" id="hint">원본 그림 보기</button><button class="sub" id="re">다시 섞기</button><div id="fb"></div>`;
+  const draw = () => {
+    document.getElementById("pz").innerHTML = order.map((p, i) => `<button class="piece${sel === i ? " sel" : ""}" data-i="${i}" aria-label="조각 ${i + 1}${sel === i ? " 선택됨" : ""}"
+      style="background-image:url('${src}');background-size:${C * 100}% ${R * 100}%;background-position:${(p % C) / (C - 1 || 1) * 100}% ${Math.floor(p / C) / (R - 1 || 1) * 100}%"></button>`).join("");
+  };
+  draw();
+  document.getElementById("pz").onclick = e => {
+    const b = e.target.closest(".piece"); if (!b) return;
+    const i = +b.dataset.i;
+    if (sel === null) sel = i;
+    else { if (sel !== i) { [order[sel], order[i]] = [order[i], order[sel]]; moves++; } sel = null; }
+    draw();
+    document.getElementById("msg").textContent = `이동 ${moves}회`;
+    if (order.every((v, k) => v === k)) {
+      document.getElementById("pz").style.gap = "0";
+      state.answers.push({ questionId: q.questionId, inputType: "puzzle", confirmedText: "completed", correct: true, puzzleMoves: moves, puzzleHintViews: hints, puzzleRestarts: restarts, feedback: ["그림을 원래 모습으로 완성했어요."] });
+      document.getElementById("fb").innerHTML = `<p class="ok">✔ 그림을 원래 모습으로 완성했어요.</p><button id="next">다음</button>`;
+      document.getElementById("next").onclick = () => { state.q++; renderQuestion(); };
+    }
+  };
+  document.getElementById("hint").onclick = () => { hints++; const w = window.open(src, "_blank"); if (!w) alert("팝업이 막혀 원본을 열 수 없어요."); };
+  document.getElementById("re").onclick = () => { restarts++; sel = null; shuffle(); draw(); };
+}
+
+// 4. 결과 JSON
+function renderResult() {
+  const L = state.lesson, s = state.student;
+  const result = {
+    schemaVersion: "1.0", lessonId: L.lessonId, lessonVersion: L.lessonVersion, contentHash: L.contentHash,
+    student: s, startedAt: state.startedAt, completedAt: new Date().toISOString(), app: "simple",
+    reading: { threshold: L.readingThreshold, attempts: state.attempts }, answers: state.answers,
+  };
+  const json = JSON.stringify(result, null, 2);
+  const name = `${L.lessonId}_${s.class}-${s.number}_${s.anonymousId}.json`;
+  app.innerHTML = `<h1>모든 문제를 마쳤어요</h1>
+    <p>결과 파일을 내려받거나 복사해서 선생님께 제출하세요. 자동 피드백은 형성평가 참고용이에요.</p>
+    <button id="dl">JSON 내려받기</button><button class="sub" id="cp">내용 복사</button>
+    <p id="msg" class="note"></p><pre>${esc(json)}</pre>`;
+  document.getElementById("dl").onclick = () => {
+    const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(new Blob([json], { type: "application/json" })), download: name });
+    a.click(); URL.revokeObjectURL(a.href);
+    document.getElementById("msg").textContent = `✔ ${name} 내려받기를 시작했어요.`;
+  };
+  document.getElementById("cp").onclick = () => navigator.clipboard.writeText(json)
+    .then(() => document.getElementById("msg").textContent = "✔ 복사했어요.")
+    .catch(() => document.getElementById("msg").textContent = "복사 권한이 없어요. 아래 내용을 직접 선택해 복사하세요.");
+}
+
+init();
+</script>
+</body>
+</html>

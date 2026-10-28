@@ -1,0 +1,12 @@
+[
+  {
+    "lessonId": "science5-lesson01-temperature",
+    "title": "온도계로 물체의 온도를 측정하기",
+    "subject": "과학",
+    "grade": 5,
+    "unit": "3. 열과 우리 생활",
+    "version": 1,
+    "status": "published",
+    "path": "lessons/science5-lesson01-temperature/lesson.json"
+  }
+]
