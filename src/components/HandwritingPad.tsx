@@ -14,6 +14,7 @@ export default function HandwritingPad({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawingRef = useRef(false);
   const [strokes, setStrokes] = useState<Stroke[]>([]);
+  const strokesRef = useRef<Stroke[]>([]);
   const [status, setStatus] = useState("");
   const [progress, setProgress] = useState(0);
 
@@ -63,41 +64,44 @@ export default function HandwritingPad({
     };
   };
 
-  const start = (event: React.PointerEvent<HTMLCanvasElement>) => {
-    event.currentTarget.setPointerCapture(event.pointerId);
-    drawingRef.current = true;
-    const next = [...strokes, { points: [pointFromEvent(event)] }];
+  // 이벤트 처리 중에 좌표를 바로 계산한다. 상태 갱신 함수 안에서 계산하면
+  // React가 event.currentTarget을 비운 뒤라 오류가 나고 화면 전체가 멈춘다.
+  const commit = (next: Stroke[]) => {
+    strokesRef.current = next;
     setStrokes(next);
     onStrokesChange(next);
+  };
+
+  const start = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    drawingRef.current = true;
+    commit([...strokesRef.current, { points: [pointFromEvent(event)] }]);
   };
 
   const move = (event: React.PointerEvent<HTMLCanvasElement>) => {
     if (!drawingRef.current) return;
-    setStrokes((current) => {
-      const next = current.map((stroke, index) =>
-        index === current.length - 1
-          ? { points: [...stroke.points, pointFromEvent(event)] }
-          : stroke,
-      );
-      onStrokesChange(next);
-      return next;
-    });
+    const point = pointFromEvent(event);
+    const current = strokesRef.current;
+    const last = current[current.length - 1];
+    if (!last) return;
+    commit([...current.slice(0, -1), { points: [...last.points, point] }]);
   };
 
-  const stop = () => {
+  const stop = (event: React.PointerEvent<HTMLCanvasElement>) => {
     drawingRef.current = false;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
   };
 
   const clear = () => {
-    setStrokes([]);
-    onStrokesChange([]);
+    commit([]);
     setStatus("");
   };
 
   const undo = () => {
-    const next = strokes.slice(0, -1);
-    setStrokes(next);
-    onStrokesChange(next);
+    commit(strokesRef.current.slice(0, -1));
   };
 
   const recognize = async () => {
